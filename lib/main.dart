@@ -1,6 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'task.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -29,6 +35,29 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  
+  Future<void> _testWriteToFirestore() async {
+    try {
+      Task morningTask = Task(
+        id: '',
+        name: 'Test Task from Flutter App',
+        isCompleted: false,
+        timePeriod: 'Morning',
+        createdAt: DateTime.now(),
+        location: '',
+      );
+      Map<String, dynamic> taskData = morningTask.toMap();
+      await FirebaseFirestore.instance.collection('tasks').add(taskData);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task saved to Firestore!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Firestore error: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,58 +72,63 @@ class _MyHomePageState extends State<MyHomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               ExpansionTile(
-              title: Text(
-              "Morning",
-              style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              children: <Widget>[
-                createTaskItem("Make your bed"),
-                createTaskItem("Prep food"),
-              ],
-              ),
-              SizedBox(height: 8),
-              ExpansionTile(
-              title: Text(
-              "Afternoon",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              children: <Widget>[
-              createTaskItem("Work on CIS project(1hr)"),
-              createTaskItem("Exercise(30 mins)"),
-              createTaskItem("Read a book(30 mins)"),
-              ]
+                title: Text(
+                  "Morning",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                children: <Widget>[
+                  createTaskItem("Make your bed"),
+                  createTaskItem("Prep food"),
+                ],
               ),
               SizedBox(height: 8),
               ExpansionTile(
-              title: Text(
-                "Evening",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                title: Text(
+                  "Afternoon",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                children: <Widget>[
+                  createTaskItem("Work on CIS project(1hr)"),
+                  createTaskItem("Exercise(30 mins)"),
+                  createTaskItem("Read a book(30 mins)"),
+                ],
               ),
-              children: <Widget>[
-              createTaskItem("Daily night routine"),
-              createTaskItem("Plan for next day"),
-              createTaskItem("Journal"),
-              ]
+              SizedBox(height: 8),
+              ExpansionTile(
+                title: Text(
+                  "Evening",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                children: <Widget>[
+                  createTaskItem("Daily night routine"),
+                  createTaskItem("Plan for next day"),
+                  createTaskItem("Journal"),
+                ],
               ),
             ],
           ),
         ),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     const snackBar = SnackBar(
+      //       content: Text('Add Task feature coming soon!'),
+      //       duration: Duration(seconds: 3),
+      //     );
+      //     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      //   },
+      //   tooltip: 'Add Task',
+      //   child: const Icon(Icons.add),
+      // ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          const snackBar = SnackBar(
-            content: Text('Add Task feature coming soon!'),
-            duration: Duration(seconds: 3),
-            );
-            ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        },
+        onPressed: _testWriteToFirestore,
         tooltip: 'Add Task',
         child: const Icon(Icons.add),
       ),
     );
   }
 
-Widget createTaskItem(String taskName) {
+  Widget createTaskItem(String taskName) {
     return Row(
       children: [
         Checkbox(value: false, onChanged: null),
@@ -103,5 +137,4 @@ Widget createTaskItem(String taskName) {
       ],
     );
   }
-
 }
